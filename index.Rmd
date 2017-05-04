@@ -1,0 +1,358 @@
+---
+title: 'Statistical Inference Project: Basic Inferential Data Analysis'
+author: "Shashank Sane"
+date: "March 7, 2017"
+output:
+  html_document: default
+  word_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Synopsis
+This article explores the ToothGrowth data set in R and performs basic inferential data analysis on the same.The following conclusions are reached based on the analysis of the ToothGrowth data set:
+
+1. Toothgrowth length increases on increase in dosage (from 0.5 to 1 to 2 mg/day) for both the supplements orange juice (coded as OJ) and ascorbic acid (coded as VJ).
+2. Toothgrowth is more for OJ as compared to VC.
+3. Increase in Toothgrowth rate with increase in dosage is more in VC as compared to OJ consequently Toothgrowth for dosage 2 mg/day is similar for both OJ and VC.
+
+## About ToothGrowth Dataset
+The ToothGrowth data set contains response in the length of odontoblasts (cells responsible for tooth growth) in 60 guinea pigs. Each animal received one of three dose levels of vitamin C (0.5, 1, and 2 mg/day) by one of two delivery methods, (orange juice or ascorbic acid (a form of vitamin C and coded as VC).
+
+## 1: Exploratory Data Analysis
+In this section we will explore the ToothGrowth data set and examine the properties of the data set.
+```{r chunk1, echo=FALSE}
+# load required libraries
+library(ggplot2)
+library(knitr)
+```
+
+```{r chunk2,echo=FALSE}
+# First we would use the structure function str to examine ToothGrowth properties
+# use str
+str(ToothGrowth)
+```
+###
+The data set contains 60 observations(which correspond to 60 guinea pigs), with two factors OJ and VC.On checking the distribution of data set based on factor level and dosage level. (use R function table to find the same) we find that the data set is equally divided among factors OC and VJ and also between dosage values.So there are 10 samples for each supp and dose combination.
+```{r chunk3,echo=FALSE}
+
+# observation count for factors OC and VJ
+table(ToothGrowth$supp)
+
+# observation count for dosage
+table(ToothGrowth$dose)
+
+```
+
+###
+We plot the Toothgrowth data set grouped based on dosage and supplement below:
+```{r chunk4,echo=FALSE}
+
+# Set the data and x, y coordinates for ggplot
+g <- ggplot(data=ToothGrowth,mapping = aes(x=dose,y=len,color=supp))
+
+# Add boxplot to show the distribution and mean for each distribution, group the plot based on dose.
+g <- g + geom_boxplot(aes(group=dose))
+
+# Add points to show the data points
+g <- g + geom_point(alpha = 0.5)
+
+# Add a smoother to show the increase/decrease in length
+g <- g + geom_smooth(method="lm")
+
+# use facet_wrap to show different graph for VC and OJ
+g <- g +facet_wrap(~supp)
+
+# Add the label and title and the output the graph
+g <- g + xlab("Dosage")+ylab("Toothgrowth Length")+ggtitle("Effects of dosage and supplement on toothgrowth")
+
+g
+
+```
+
+###
+**Figure: 1**
+
+###
+As can be seen from the above graph that the data sample suggests:
+
+1. Toothgrowth length increases on increase in dosage (for both OJ and VC).
+2. Toothgrowth is more for OJ as compared to VC.
+3. Toothgrowth rate is steeper with increase in dosage for VC as compared to OJ (tooth growth for dosage 2.0 is almost similar for both OC and VJ).
+
+###
+We can check the third point above by drawing an overlapping graph for supplements OJ and VC below:
+```{r chunk5,echo=FALSE}
+# add data
+g <- ggplot(data=ToothGrowth,mapping = aes(x=dose,y=len,color=supp))
+
+# draw points and smoother
+g <- g + geom_point(alpha = 0.5)+geom_smooth(method="lm")
+g <- g + xlab("Dosage")+ylab("Toothgrowth Length")+ggtitle("Effects of dosage and supplement on toothgrowth")
+
+g
+
+```
+
+###
+**Figure: 2**
+
+###
+as seen in above graph tooth growth seem to converge to similar values for dosage =0.2 for both OJ and VC.
+
+### 
+We would now use confidence interval and hypothesis test on the data.As the number of observations for each set is small = 10 observations, we would use **t intervals** for finding confidence intervals and hypothesis testing. Furthermore as the observations are for 60 different guinea pigs we would consider the observations to be **not paired**. The methodology used for confirming our hypothesis is as follows:
+
+* First split the data in different subsets for OJ and VC (for each dosage 0.5,1 and 2).
+* Find the t confidence interval and p value for difference in mean tooth growth for dosage 0.5 and 1 mg/day for OJ. Use the result to accept or reject NULL hypothesis which is - there is no difference in dosage levels 0.5 and 1.
+* Repeat the above step for OJ for dosage 1 and 2. Follow the same step for VC.
+* Find the t confidence interval and p value for difference in mean tooth growth for dosage 0.5 and 0.5 mg/day for OJ and VC. Use the result to accept or reject NULL hypothesis which is - there is no difference in mean tooth growth between OJ and VC dosage level 0.5.
+* Repeat the above step for dosage levels 1 and 2.
+* The cutoff for p value for rejecting null hypothesis would be 0.5.
+```{r chunk6,echo=FALSE}
+#split the data in different subsets for OJ and VC (for each dosage 0.5,1 and 2)
+
+# Subset for OJ and VC for dosage 0.5
+dfOJ1 <- subset(ToothGrowth,ToothGrowth$supp == 'OJ' & ToothGrowth$dose == 0.5 )
+dfVC1 <- subset(ToothGrowth,ToothGrowth$supp == 'VC' & ToothGrowth$dose == 0.5 )
+
+# Subset for OJ and VC for dosage 1
+dfOJ2 <- subset(ToothGrowth,ToothGrowth$supp == 'OJ' & ToothGrowth$dose == 1 )
+dfVC2 <- subset(ToothGrowth,ToothGrowth$supp == 'VC' & ToothGrowth$dose == 1 )
+
+# Subset for OJ and VC for dosage 2
+dfOJ3 <- subset(ToothGrowth,ToothGrowth$supp == 'OJ' & ToothGrowth$dose == 2 )
+dfVC3 <- subset(ToothGrowth,ToothGrowth$supp == 'VC' & ToothGrowth$dose == 2 )
+
+```
+###
+The results of the hypothesis testing using t test is listed below:
+
+### 1: increase of length from dosage 0.5 to 1 for supplement OJ
+**Hypothesis 1**: mean tooth growth for OJ for dosage 1 is greater than that for dosage 0.5 for OJ.
+**Null Hypothesis**: no difference in means for dosage = 1 and dosage = 0.5 (both for OJ).
+```{r chunk7,echo=FALSE}
+
+# mean length for toothgrowth of OJ for dosage = 0.5
+mean_OJ1 <- mean(dfOJ1$len)
+
+# mean length for toothgrowth of OJ for dosage = 1
+mean_OJ2 <- mean(dfOJ2$len)
+
+# t Confidence interval for the difference of means for dosage = 1 and dosage = 0.5
+h1.OJ.conf <- t.test(dfOJ2$len,dfOJ1$len,paired = FALSE)$conf.int
+
+# p value for for the difference of means for dosage = 1 and dosage = 0.5
+h1.OJ.p <- t.test(dfOJ2$len,dfOJ1$len,paired = FALSE)$p.value
+```
+The mean for dosage = 1 for OJ: `r mean_OJ2` is greater than the mean for dosage = 0.5 for OJ: `r mean_OJ1`. Since the t confidence interval: `r h1.OJ.conf` does not contain zero and the p value: `r h1.OJ.p`  is much less than 0.5 we **reject** the null hypothesis. 
+
+### 2: increase of length from dosage 1 to 2 for supplement OJ
+**Hypothesis 2**: mean tooth growth for OJ for dosage 2 is greater than that for dosage 1 for OJ.
+**Null Hypothesis**: no difference in means for dosage = 2 and dosage = 1 (both for OJ).
+```{r chunk8,echo=FALSE}
+
+# mean length for toothgrowth of OJ for dosage = 2
+mean_OJ3 <- mean(dfOJ3$len)
+
+# t Confidence interval for the difference of means for dosage = 2 and dosage = 2
+h2.OJ.conf <- t.test(dfOJ3$len,dfOJ2$len,paired = FALSE)$conf.int
+
+# p value for for the difference of means for dosage = 2 and dosage = 1
+h2.OJ.p <- t.test(dfOJ3$len,dfOJ2$len,paired = FALSE)$p.value
+```
+The mean for dosage = 2 for OJ: `r mean_OJ3` is greater than the mean for dosage = 1 for OJ: `r mean_OJ2`. Since the t confidence interval: `r h2.OJ.conf` does not contain zero and the p value: `r h2.OJ.p`  is much less than 0.5 we **reject** the null hypothesis. 
+
+### 3: increase of length from dosage 0.5 to 1 for supplement VC
+**Hypothesis 3**: mean tooth growth for VC for dosage 1 is greater than that for dosage 0.5 for VC.
+**Null Hypothesis**: no difference in means for dosage = 1 and dosage = 0.5 (both for VC).
+```{r chunk9,echo=FALSE}
+
+# mean length for toothgrowth of VC for dosage = 0.5
+mean_VC1 <- mean(dfVC1$len)
+
+# mean length for toothgrowth of VC for dosage = 1
+mean_VC2 <- mean(dfVC2$len)
+
+# t Confidence interval for the difference of means for dosage = 1 and dosage = 0.5
+h1.VC.conf <- t.test(dfVC2$len,dfVC1$len,paired = FALSE)$conf.int
+
+# p value for for the difference of means for dosage = 1 and dosage = 0.5
+h1.VC.p <- t.test(dfVC2$len,dfVC1$len,paired = FALSE)$p.value
+```
+The mean for dosage = 1 for VC: `r mean_VC2` is greater than the mean for dosage = 0.5 for VC: `r mean_VC1`. Since the t confidence interval: `r h1.VC.conf` does not contain zero and the p value: `r h1.VC.p`  is much less than 0.5 we **reject** the null hypothesis. 
+
+### 4: increase of length from dosage 1 to 2 for supplement VC
+**Hypothesis 4**: mean tooth growth for VC for dosage 2 is greater than that for dosage 1 for VC.
+**Null Hypothesis**: no difference in means for dosage = 2 and dosage = 1 (both for VC).
+```{r chunk10,echo=FALSE}
+
+# mean length for toothgrowth of VC for dosage = 2
+mean_VC3 <- mean(dfVC3$len)
+
+# t Confidence interval for the difference of means for dosage = 2 and dosage = 2
+h2.VC.conf <- t.test(dfVC3$len,dfVC2$len,paired = FALSE)$conf.int
+
+# p value for for the difference of means for dosage = 2 and dosage = 1
+h2.VC.p <- t.test(dfVC3$len,dfVC2$len,paired = FALSE)$p.value
+```
+The mean for dosage = 2 for VC: `r mean_VC3` is greater than the mean for dosage = 1 for VC: `r mean_VC2`. Since the t confidence interval: `r h2.VC.conf` does not contain zero and the p value: `r h2.VC.p`  is much less than 0.5 we **reject** the null hypothesis. 
+
+### 5: increase of length for dosage 0.5 is greater for supplement OJ than Supplement VJ
+**Hypothesis 5**: mean tooth growth for OJ for dosage 0.5 is greater than that for dosage 0.5 for VC.
+**Null Hypothesis**: no difference in means for dosage = 0.5 for OJ and VC.
+```{r chunk11,echo=FALSE}
+
+# t Confidence interval for the difference of means for dosage = 2 and dosage = 2
+h3.conf <- t.test(dfOJ1$len,dfVC1$len,paired = FALSE)$conf.int
+
+# p value for for the difference of means for dosage = 2 and dosage = 1
+h3.p <- t.test(dfOJ1$len,dfVC1$len,paired = FALSE)$p.value
+```
+The mean for dosage = 0.5 for OJ: `r mean_OJ1` is greater than the mean for dosage = 0.5 for VC: `r mean_VC1`. Since the t confidence interval: `r h3.conf` does not contain zero and the p value: `r h3.p`  is less than 0.5 we **reject** the null hypothesis. 
+
+### 6: increase of length for dosage 1 is greater for supplement OJ than Supplement VJ
+**Hypothesis 6**: mean tooth growth for OJ for dosage 1 is greater than that for dosage 1 for VC.
+**Null Hypothesis**: no difference in means for dosage = 1 for OJ and VC.
+```{r chunk12,echo=FALSE}
+
+# t Confidence interval for the difference of means for dosage = 2 and dosage = 2
+h4.conf <- t.test(dfOJ2$len,dfVC2$len,paired = FALSE)$conf.int
+
+# p value for for the difference of means for dosage = 2 and dosage = 1
+h4.p <- t.test(dfOJ2$len,dfVC2$len,paired = FALSE)$p.value
+```
+The mean for dosage = 1 for OJ: `r mean_OJ2` is greater than the mean for dosage = 1 for VC: `r mean_VC2`. Since the t confidence interval: `r h4.conf` does not contain zero and the p value: `r h4.p`  is less than 0.5 we **reject** the null hypothesis. 
+
+
+### 7: increase of length for dosage 2 is similar for supplement OJ than Supplement VJ
+**Hypothesis 7**: mean tooth growth for OJ for dosage 1 is similar for dosage 1 for VC.
+**Null Hypothesis**: no difference in means for dosage = 1 for OJ and VC.
+```{r chunk13,echo=FALSE}
+
+# t Confidence interval for the difference of means for dosage = 2 and dosage = 2
+h5.conf <- t.test(dfOJ3$len,dfVC3$len,paired = FALSE)$conf.int
+
+# p value for for the difference of means for dosage = 2 and dosage = 1
+h5.p <- t.test(dfOJ3$len,dfVC3$len,paired = FALSE)$p.value
+```
+The mean for dosage = 2 for OJ: `r mean_OJ3` is in the same range as the mean for dosage = 2 for VC: `r mean_VC3`. Since the t confidence interval: `r h5.conf` contains zero and the p value: `r h5.p`  is greater than 0.5 we **accept** the null hypothesis. 
+
+## Appendix:
+
+###
+
+1. OJ: Supplement Orange Juice.
+
+2. VC: Supplement Ascorbic Acid.
+
+3. Code for Figure: 1
+```{r chunk14,eval=FALSE}
+# Set the data and x, y coordinates for ggplot
+g <- ggplot(data=ToothGrowth,mapping = aes(x=dose,y=len,color=supp))
+# Add boxplot to show the distribution and mean for each distribution, group the plot based on dose.
+g <- g + geom_boxplot(aes(group=dose))
+# Add points to show the data points
+g <- g + geom_point(alpha = 0.5)
+# Add a smoother to show the increase/decrease in length
+g <- g + geom_smooth(method="lm")
+# use facet_wrap to show different graph for VC and OJ
+g <- g +facet_wrap(~supp)
+# Add the label and title and the output the graph
+g <- g + xlab("Dosage")+ylab("Toothgrowth Length")+ggtitle("Effects of dosage and supplement on toothgrowth")
+g
+```
+
+4. Code for Figure: 2
+```{r chunk15,eval=FALSE}
+# add data
+g <- ggplot(data=ToothGrowth,mapping = aes(x=dose,y=len,color=supp))
+# draw points and smoother
+g <- g + geom_point(alpha = 0.5)+geom_smooth(method="lm")
+g <- g + xlab("Dosage")+ylab("Toothgrowth Length")+ggtitle("Effects of dosage and supplement on toothgrowth")
+g
+```
+
+5. Code to split data for OJ and VC based on dosage:
+```{r chunk16,eval=FALSE}
+#split the data in different subsets for OJ and VC (for each dosage 0.5,1 and 2)
+# Subset for OJ and VC for dosage 0.5
+dfOJ1 <- subset(ToothGrowth,ToothGrowth$supp == 'OJ' & ToothGrowth$dose == 0.5 )
+dfVC1 <- subset(ToothGrowth,ToothGrowth$supp == 'VC' & ToothGrowth$dose == 0.5 )
+# Subset for OJ and VC for dosage 1
+dfOJ2 <- subset(ToothGrowth,ToothGrowth$supp == 'OJ' & ToothGrowth$dose == 1 )
+dfVC2 <- subset(ToothGrowth,ToothGrowth$supp == 'VC' & ToothGrowth$dose == 1 )
+# Subset for OJ and VC for dosage 2
+dfOJ3 <- subset(ToothGrowth,ToothGrowth$supp == 'OJ' & ToothGrowth$dose == 2 )
+dfVC3 <- subset(ToothGrowth,ToothGrowth$supp == 'VC' & ToothGrowth$dose == 2 )
+```
+
+6. Code for Hypothesis 1:
+```{r chunk17,eval=FALSE}
+# mean length for toothgrowth of OJ for dosage = 0.5
+mean_OJ1 <- mean(dfOJ1$len)
+# mean length for toothgrowth of OJ for dosage = 1
+mean_OJ2 <- mean(dfOJ2$len)
+# t Confidence interval for the difference of means for dosage = 1 and dosage = 0.5
+h1.OJ.conf <- t.test(dfOJ2$len,dfOJ1$len,paired = FALSE)$conf.int
+# p value for for the difference of means for dosage = 1 and dosage = 0.5
+h1.OJ.p <- t.test(dfOJ2$len,dfOJ1$len,paired = FALSE)$p.value
+```
+
+7. Code for Hypothesis 2:
+```{r chunk18,eval=FALSE}
+# mean length for toothgrowth of OJ for dosage = 2
+mean_OJ3 <- mean(dfOJ3$len)
+# t Confidence interval for the difference of means for dosage = 2 and dosage = 2
+h2.OJ.conf <- t.test(dfOJ3$len,dfOJ2$len,paired = FALSE)$conf.int
+# p value for for the difference of means for dosage = 2 and dosage = 1
+h2.OJ.p <- t.test(dfOJ3$len,dfOJ2$len,paired = FALSE)$p.value
+```
+
+8. Code for Hypothesis 3:
+```{r chunk19,eval=FALSE}
+# mean length for toothgrowth of VC for dosage = 0.5
+mean_VC1 <- mean(dfVC1$len)
+# mean length for toothgrowth of VC for dosage = 1
+mean_VC2 <- mean(dfVC2$len)
+# t Confidence interval for the difference of means for dosage = 1 and dosage = 0.5
+h1.VC.conf <- t.test(dfVC2$len,dfVC1$len,paired = FALSE)$conf.int
+# p value for for the difference of means for dosage = 1 and dosage = 0.5
+h1.VC.p <- t.test(dfVC2$len,dfVC1$len,paired = FALSE)$p.value
+```
+
+9. Code for Hypothesis 4:
+```{r chunk20,eval=FALSE}
+# mean length for toothgrowth of VC for dosage = 2
+mean_VC3 <- mean(dfVC3$len)
+# t Confidence interval for the difference of means for dosage = 2 and dosage = 1
+h2.VC.conf <- t.test(dfVC3$len,dfVC2$len,paired = FALSE)$conf.int
+# p value for for the difference of means for dosage = 2 and dosage = 1
+h2.VC.p <- t.test(dfVC3$len,dfVC2$len,paired = FALSE)$p.value
+```
+
+10. Code for Hypothesis 5:
+```{r chunk21,eval=FALSE}
+# t Confidence interval for the difference of means for dosage = 0.5 (OJ) and dosage = 0.5 (VC)
+h3.conf <- t.test(dfOJ1$len,dfVC1$len,paired = FALSE)$conf.int
+# p value for for the difference of means for dosage = 0.5 (OJ and VC) 
+h3.p <- t.test(dfOJ1$len,dfVC1$len,paired = FALSE)$p.value
+```
+
+11. Code for Hypothesis 6:
+```{r chunk22,eval=FALSE}
+# t Confidence interval for the difference of means for dosage = 1 (OJ) and dosage = 1(VC)
+h4.conf <- t.test(dfOJ2$len,dfVC2$len,paired = FALSE)$conf.int
+# p value for for the difference of means for dosage = 1 (OJ and VC)
+h4.p <- t.test(dfOJ2$len,dfVC2$len,paired = FALSE)$p.value
+```
+
+12. Code for Hypothesis 7:
+```{r chunk23,eval=FALSE}
+# t Confidence interval for the difference of means for dosage = 2 (OJ) and dosage = 2(VC)
+h5.conf <- t.test(dfOJ3$len,dfVC3$len,paired = FALSE)$conf.int
+# p value for for the difference of means for dosage = 2 (OJ and VC)
+h5.p <- t.test(dfOJ3$len,dfVC3$len,paired = FALSE)$p.value
+```
